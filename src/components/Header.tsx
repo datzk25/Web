@@ -234,7 +234,7 @@ export function Header() {
                         <VStack gap={1} align="stretch">
                           {[
                             { to: '/profile', icon: LuUser, label: 'Hồ Sơ Cá Nhân' },
-                            { to: '/profile?tab=orders', icon: LuHistory, label: 'Lịch Sử Mua' },
+                            { to: '/transactions', icon: LuHistory, label: 'Lịch Sử Giao Dịch' },
                             { to: '/deposit', icon: LuWallet, label: 'Nạp Tiền' },
                             { to: '/support', icon: LuHeadphones, label: 'Hỗ Trợ' },
                           ].map((item) => (

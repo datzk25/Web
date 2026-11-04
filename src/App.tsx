@@ -19,6 +19,7 @@ import DepositPage from './pages/DepositPage'
 import AdminPage from './pages/AdminPage'
 import CartPage from './pages/CartPage'
 import SupportPage from './pages/SupportPage'
+import TransactionHistoryPage from './pages/TransactionHistoryPage'
 
 function AnimatedRoutes() {
   const location = useLocation()
@@ -33,6 +34,7 @@ function AnimatedRoutes() {
         <Route path="/products/:slug" element={<ProductDetailPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/transactions" element={<TransactionHistoryPage />} />
         <Route path="/deposit" element={<DepositPage />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/admin" element={<AdminPage />} />
