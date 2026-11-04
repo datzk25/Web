@@ -1,0 +1,76 @@
+
+name: Build NovaX for SmarterASP
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install
+        working-directory: .
+        run: npm ci
+        if: ${{ hashFiles('package.json') != '' }}
+
+      - name: Build
+        run: |
+          if [ -f package.json ]; then
+            npm run build
+          elif [ -f Web-main/package.json ]; then
+            cd Web-main
+            npm ci
+            npm run build
+          else
+            echo "Cannot find package.json"
+            exit 1
+          fi
+
+      - name: Create web.config
+        run: |
+          mkdir -p dist
+          cat > dist/web.config <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <configuration>
+            <system.webServer>
+              <rewrite>
+                <rules>
+                  <rule name="React SPA" stopProcessing="true">
+                    <match url=".*" />
+                    <conditions>
+                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+                      <add input="{REQUEST_FILENAME}" matchType="IsDirectory" negate="true" />
+                    </conditions>
+                    <action type="Rewrite" url="/index.html" />
+                  </rule>
+                </rules>
+              </rewrite>
+            </system.webServer>
+          </configuration>
+          EOF
+          if [ -d Web-main/dist ]; then
+            cp dist/web.config Web-main/dist/web.config
+          fi
+
+      - name: Package
+        run: |
+          if [ -d Web-main/dist ]; then
+            cd Web-main/dist
+          else
+            cd dist
+          fi
+          zip -r ../../NovaX-Hosting.zip .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: NovaX-Hosting
+          path: NovaX-Hosting.zip
