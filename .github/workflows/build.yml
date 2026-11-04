@@ -17,28 +17,35 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install
-        working-directory: .
-        run: npm ci
-        if: ${{ hashFiles('package.json') != '' }}
-
-      - name: Build
+      - name: Extract source
         run: |
-          if [ -f package.json ]; then
-            npm run build
-          elif [ -f Web-main/package.json ]; then
-            cd Web-main
-            npm ci
-            npm run build
+          if [ -f Web-main.zip ]; then
+            unzip Web-main.zip -d source
+          elif [ -f package.json ]; then
+            mkdir source
+            cp -r . source/
           else
-            echo "Cannot find package.json"
+            echo "Source not found"
             exit 1
           fi
 
-      - name: Create web.config
+      - name: Find project
         run: |
-          mkdir -p dist
-          cat > dist/web.config <<'EOF'
+          FILE=$(find source -name package.json | head -1)
+          test -n "$FILE"
+          echo "PROJECT_DIR=$(dirname "$FILE")" >> $GITHUB_ENV
+
+      - name: Install and build
+        run: |
+          cd "$PROJECT_DIR"
+          npm ci
+          npm run build
+
+      - name: Package
+        run: |
+          mkdir -p output
+          cp -r "$PROJECT_DIR/dist/." output/
+          cat > output/web.config <<'EOF'
           <?xml version="1.0" encoding="UTF-8"?>
           <configuration>
             <system.webServer>
@@ -57,20 +64,10 @@ jobs:
             </system.webServer>
           </configuration>
           EOF
-          if [ -d Web-main/dist ]; then
-            cp dist/web.config Web-main/dist/web.config
-          fi
-
-      - name: Package
-        run: |
-          if [ -d Web-main/dist ]; then
-            cd Web-main/dist
-          else
-            cd dist
-          fi
-          zip -r ../../NovaX-Hosting.zip .
+          cd output
+          zip -r ../NovaX-Hosting.zip .
 
       - uses: actions/upload-artifact@v4
         with:
           name: NovaX-Hosting
-          path: NovaX-Hosting.zip
+          path: output/NovaX-Hosting.zip
